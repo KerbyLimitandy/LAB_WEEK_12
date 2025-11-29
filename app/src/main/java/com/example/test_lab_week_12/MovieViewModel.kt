@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.test_lab_week_12.model.Movie
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import okhttp3.Dispatcher
 
@@ -13,18 +16,23 @@ class MovieViewModel(private val movieRepository: MovieRepository) : ViewModel()
         fetchPopularMovies()
     }
 
+    private val _popularMovies = MutableStateFlow(
+        emptyList<Movie>()
+    )
+
     //Define the LiveData
-    val popularMovies: LiveData<List<Movie>>
-        get() = movieRepository.movies
+    val popularMovies: StateFlow<List<Movie>> = _popularMovies
 
-    val error: LiveData<String>
-        get() = movieRepository.error
+    private val _error = MutableStateFlow("")
+    val error: StateFlow<String> = _error
 
-    //Fetch Movies from API
     private fun fetchPopularMovies() {
-        //Launch a coroutine in viewModelScope and Dispatchers.IO means that this coroutine will run on shared pool of threads
         viewModelScope.launch(Dispatchers.IO) {
-            movieRepository.fetchMovies()
+            movieRepository.fetchMovies().catch {
+                _error.value = "An exception occurred: ${it.message}"
+            }.collect {
+                _popularMovies.value = it
+            }
         }
     }
 }
