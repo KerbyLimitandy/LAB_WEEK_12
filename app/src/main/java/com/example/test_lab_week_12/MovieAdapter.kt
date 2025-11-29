@@ -46,7 +46,7 @@ class MovieAdapter(private val clickListener: MovieClickListener) :
             titleText.text = movie.title
 
             Glide.with(itemView.context)
-                .load("$imageUrl${movie.posterPath}")
+                .load("$imageUrl${movie.poster_path}")
                 .placeholder(R.mipmap.ic_launcher)
                 .fitCenter()
                 .into(poster)
